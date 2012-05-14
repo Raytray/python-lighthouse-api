@@ -235,6 +235,28 @@ class Lighthouse(object):
 			self.get_tickets(p)
 		return
 		
+<<<<<<< HEAD
+=======
+	def fetch_members(self) :
+		for p in self.projects :
+			self.get_members( p ) # Get Members
+		return
+
+	def fetch_tickets(self) :
+		"""Pulls in all the tickets available and populates them with
+		their properties"""
+		for p in self.projects :
+			self.get_tickets( p )
+		return
+
+	def fetch_all_tickets(self) :
+		"""Pulls in all the tickets available and populates them with
+		their properties"""
+		for p in self.projects :
+			self.get_all_tickets( p )
+		return
+
+>>>>>>> 2b0af69... Add class & function on fetching the Member data
 	def get_projects(self):
 		"""Retrieves all available projects
 		
@@ -348,6 +370,36 @@ class Lighthouse(object):
 
 		return ticket
 			
+	def get_members( self, project ) :
+		"""Retrieves all the members in a project
+		"""
+		if not isinstance(project, Project):
+			raise TypeError('Project must be instance of Project object')
+
+		path = Member.endpoint_proj % ( project.id )
+		member_list = self._get_data( path ) # Has page or not ?
+
+		if( member_list.get('children', None) ) :
+			for member in member_list['children'] :
+				m_obj = Member()
+				for field in member['children']:
+					field_name, field_value, field_type = self._parse_field( field )
+					# Deep into sub level
+					if( field.get('children', None) ) :
+						set_sub = {}
+						for field_sub in field['children'] :
+							field_name_s, field_value_s, field_type_s = self._parse_field( field_sub )
+							py_field_name_s = field_name_s.replace('-', '_')
+							set_sub[ py_field_name_s ] = field_value_s
+						m_obj.__setattr__( field_name, set_sub )
+						m_obj.fields.add( field_name )
+
+					else :
+						py_field_name = field_name.replace('-', '_')
+						m_obj.__setattr__( py_field_name, field_value )
+						m_obj.fields.add( py_field_name )
+				project.members.append( m_obj )
+
 	def get_users(self, name):
 		pass
 		
@@ -409,6 +461,7 @@ class Project(object):
 	def __init__(self):
 		super(Project, self).__init__()
 		self.tickets = {}
+		self.members = []	# Members
 		self.milestones = []
 		self.messages = []
 
@@ -430,6 +483,15 @@ class Message(object):
 		super(Message, self).__init__()
 		self.arg = arg
 		
+class Member(object):
+	"""A Member"""
+	endpoint_proj = 'projects/%d/memberships.xml'
+	endpoint_user = 'users/%d/memberships.xml'
+
+	def __init__( self ) :
+		super( Member, self ).__init__()
+		self.fields = set()
+
 class User(object):
 	"""A user"""
 	def __init__(self, arg):
