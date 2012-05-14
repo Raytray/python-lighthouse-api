@@ -30,6 +30,7 @@ class Lighthouse(object):
 		self.token = token
 		self.url = url
 		self.projects = []
+		self.users = {}
 	
 	def _datetime(self, data):
 		"""Returns a datetime object representation of string
@@ -235,8 +236,6 @@ class Lighthouse(object):
 			self.get_tickets(p)
 		return
 		
-<<<<<<< HEAD
-=======
 	def fetch_members(self) :
 		for p in self.projects :
 			self.get_members( p ) # Get Members
@@ -256,7 +255,6 @@ class Lighthouse(object):
 			self.get_all_tickets( p )
 		return
 
->>>>>>> 2b0af69... Add class & function on fetching the Member data
 	def get_projects(self):
 		"""Retrieves all available projects
 		
@@ -342,7 +340,7 @@ class Lighthouse(object):
 		if page <= 0:
 			raise ValueError('Page number should be 1-indexed')
 		path = Ticket.endpoint % (project.id)
-		ticket_list = self._get_data(path+"?page=" + str(page))
+		ticket_list = self._get_data(path+"?page=" + str(page) + "&limit=999")
 		c = 0
 		if(ticket_list.get('children', None)):
 			for ticket in ticket_list['children']:
@@ -399,10 +397,18 @@ class Lighthouse(object):
 						m_obj.__setattr__( py_field_name, field_value )
 						m_obj.fields.add( py_field_name )
 				project.members.append( m_obj )
+				if m_obj.user_id not in self.users:
+					self.users[m_obj.user_id] = m_obj
 
 	def get_users(self, name):
-		pass
-		
+		return self.users
+	
+	def merge_emails(self, emails):
+		for k in emails:
+			if k in self.users:
+				print self.users[k], emails[k]
+				self.users[k].__dict__["email"] = emails[k]
+	
 	def add_ticket(self, project=None, title=None, body=None):
 		if project is None or isinstance(project, str):
 			if(len(self.projects) == 0):
@@ -491,6 +497,13 @@ class Member(object):
 	def __init__( self ) :
 		super( Member, self ).__init__()
 		self.fields = set()
+		
+	# why do we have an id and a user_id that are different?
+	def __repr__(self):
+		if 'user_id' in self.__dict__:
+			return "<Member: [%d] %s>" % (self.user_id, self.user["name"])
+		else:
+			return super(Member, self).__repr__
 
 class User(object):
 	"""A user"""
