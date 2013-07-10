@@ -292,10 +292,10 @@ class Lighthouse(object):
 		
 		>>>
 		"""
-		c = 30
+		c = 102
 		page = 1
 		ticket_count = 0
-		while c == 30:
+		while c == 102:
 			c = self.get_tickets(project, page)
 			ticket_count += c
 			page += 1
